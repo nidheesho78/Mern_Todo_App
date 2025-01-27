@@ -66,5 +66,41 @@ router.put('/todos/:id', async (req, res) => {
 });
 
 
+// EDIT todo content
+router.patch("/todos/:id", async (req, res) => {
+  const collection = await getCollection();
+  const _id = new ObjectId(req.params.id);
+  const { todo } = req.body;
+
+  if (!todo || typeof todo !== "string") {
+    return res.status(400).json({ msg: "Invalid or missing todo content" });
+  }
+
+  try {
+    const updateResult = await collection.updateOne(
+      { _id },
+      { $set: { todo } }
+    );
+
+    if (updateResult.matchedCount === 0) {
+      return res.status(404).json({ msg: "Todo not found" });
+    }
+
+    // Find the updated todo to return it
+    const updatedTodo = await collection.findOne({ _id });
+
+    if (!updatedTodo) {
+      return res.status(500).json({ msg: "Error fetching updated todo" });
+    }
+
+    res.status(200).json(updatedTodo); // Return the updated todo
+  } catch (error) {
+    res.status(500).json({ msg: "Error updating todo", error });
+  }
+});
+
+
+
+
 
 export default router
